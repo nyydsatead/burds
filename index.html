@@ -3,6 +3,10 @@
 <title>burds!</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
+<style>
+	@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+</style>
+
 <!-- Facebook Open Graph tags -->
 <meta property="og:url" content="https://burds.vercel.app/" />
 <meta property="og:title" content="burds!" />
@@ -97,7 +101,27 @@ body.dark::after {
 body.dark #attribution {
 	color: #999;
 }
+
+#clock-container {
+	margin: 20px;
+	padding-top: 30px; /* spacing from the top */
+	text-align: right;
+	position: relative;
+	z-index: 10;
+}
+
+#clock {
+	color: #e0e0e0;
+	font-family: "JetBrains Mono", monospace;
+	font-size: xx-large;
+}
+	
 </style>
+
+<div id="clock-container">
+	<h2 id="clock">--:--:--</h2>
+</div>
+
 <div id="attribution">
 	<p><strong>burds!</strong></p>
 	<p>web experiment by <a href="https://thesephist.com/" target="_blank">Linus</a></p>
@@ -107,3 +131,19 @@ body.dark #attribution {
 </div>
 <canvas style="width:0;height:0"></canvas>
 <script src="/bundle.js"></script>
+
+<script>
+	function updateClock() {
+		const now = new Date();
+		// Convert to GMT+3 by adding 3 hours (in milliseconds)
+		const gmt3 = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+		const hours = String(gmt3.getUTCHours()).padStart(2, '0');
+		const minutes = String(gmt3.getUTCMinutes()).padStart(2, '0');
+		const seconds = String(gmt3.getUTCSeconds()).padStart(2, '0');
+		document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds}`;
+	}
+
+	// Update the clock immediately and then every second
+	updateClock();
+	setInterval(updateClock, 1000);
+</script>
