@@ -133,48 +133,25 @@ body.dark #attribution {
 <script src="/bundle.js"></script>
 
 <script>
-	let offset = 0; // difference between local time and GMT+3
-
-	async function syncWithServer() {
+	async function updateClock() {
 		try {
 			const res = await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Europe/Moscow");
 			const data = await res.json();
 
-			// Get server time in milliseconds
-			const serverTime = new Date(
-				data.year,
-				data.month - 1,
-				data.day,
-				data.hour,
-				data.minute,
-				data.seconds
-			).getTime();
+			const h = String(data.hour).padStart(2, '0');
+			const m = String(data.minute).padStart(2, '0');
+			const s = String(data.seconds).padStart(2, '0');
 
-			// Calculate offset from local time
-			const localTime = Date.now();
-			offset = serverTime - localTime;
-		} catch (err) {
-			console.error("Time sync failed:", err);
+			document.getElementById("clock").textContent = `${h}:${m}:${s}`;
+		} catch (e) {
+			console.error("Error fetching time:", e);
 		}
 	}
 
-	function updateClock() {
-		const now = new Date(Date.now() - offset);
-		const h = String(now.getHours()).padStart(2, '0');
-		const m = String(now.getMinutes()).padStart(2, '0');
-		const s = String(now.getSeconds()).padStart(2, '0');
-		document.getElementById("clock").textContent = `${h}:${m}:${s}`;
-	}
-
-	async function startClock() {
-		await syncWithServer();
-		updateClock();
-		setInterval(updateClock, 1000); // update display
-		setInterval(syncWithServer, 60 * 1000); // resync every 60 seconds
-	}
-
-	startClock();
+	updateClock(); // initial run
+	setInterval(updateClock, 1000); // fetch every second (⚠️ heavy)
 </script>
+
 
 
 
