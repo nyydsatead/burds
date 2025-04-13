@@ -133,17 +133,35 @@ body.dark #attribution {
 <script src="/bundle.js"></script>
 
 <script>
-	function updateClock() {
-		const now = new Date();
-		// Convert to GMT+3 by adding 3 hours (in milliseconds)
-		const gmt3 = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-		const hours = String(gmt3.getUTCHours()).padStart(2, '0');
-		const minutes = String(gmt3.getUTCMinutes()).padStart(2, '0');
-		const seconds = String(gmt3.getUTCSeconds()).padStart(2, '0');
-		document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds}`;
+	let currentTime = null;
+
+	async function fetchAccurateTime() {
+		try {
+			const res = await fetch("https://worldtimeapi.io/api/timezone/Europe/Moscow");
+			const data = await res.json();
+			currentTime = new Date(data.datetime);
+		} catch (err) {
+			console.error("Failed to fetch accurate time:", err);
+			// Fallback to local system time +3 hours
+			currentTime = new Date(new Date().getTime() + 3 * 60 * 60 * 1000);
+		}
 	}
 
-	// Update the clock immediately and then every second
-	updateClock();
-	setInterval(updateClock, 1000);
+	function updateClock() {
+		if (!currentTime) return;
+		const hours = String(currentTime.getHours()).padStart(2, '0');
+		const minutes = String(currentTime.getMinutes()).padStart(2, '0');
+		const seconds = String(currentTime.getSeconds()).padStart(2, '0');
+		document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds}`;
+		currentTime = new Date(currentTime.getTime() + 1000);
+	}
+
+	async function startClock() {
+		await fetchAccurateTime();
+		updateClock();
+		setInterval(updateClock, 1000);
+	}
+
+	startClock();
 </script>
+
