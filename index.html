@@ -133,23 +133,60 @@ body.dark #attribution {
 <script src="/bundle.js"></script>
 
 <script>
-	async function updateClock() {
+	// This code uses a hybrid approach.
+	// It fetches the current accurate time for Europe/Helsinki from timeapi.io which automatically
+	// applies summer (EEST, GMT+3) and winter (EET, GMT+2) times.
+	// Then it uses the local clock to update the display every second, with a re-sync every 5 minutes.
+	
+	let baseTime = null;
+	let baseTimestamp = null;
+	
+	async function fetchAccurateTime() {
 		try {
-			const res = await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Europe/Moscow");
+			// Using timeapi.io to get the current time for Europe/Helsinki,
+			// which automatically adjusts for summer and winter time.
+			const res = await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Europe/Helsinki");
 			const data = await res.json();
-
-			const h = String(data.hour).padStart(2, '0');
-			const m = String(data.minute).padStart(2, '0');
-			const s = String(data.seconds).padStart(2, '0');
-
-			document.getElementById("clock").textContent = `${h}:${m}:${s - 1}`;
-		} catch (e) {
-			console.error("Error fetching time:", e);
+			
+			// Create a Date object using the returned time data.
+			// Note: JavaScript months are 0-indexed.
+			baseTime = new Date(
+				data.year,
+				data.month - 1,
+				data.day,
+				data.hour,
+				data.minute,
+				data.seconds
+			);
+			baseTimestamp = Date.now();
+		} catch (err) {
+			console.error("Failed to fetch accurate time:", err);
 		}
 	}
-
-	updateClock(); // initial run
-	setInterval(updateClock, 1000); // fetch every second (⚠️ heavy)
+	
+	function updateClock() {
+		if (!baseTime || !baseTimestamp) return;
+		
+		// Calculate elapsed time since last sync.
+		const now = Date.now();
+		const delta = now - baseTimestamp;
+		const currentTime = new Date(baseTime.getTime() + delta);
+		
+		const hours = String(currentTime.getHours()).padStart(2, "0");
+		const minutes = String(currentTime.getMinutes()).padStart(2, "0");
+		const seconds = String(currentTime.getSeconds()).padStart(2, "0");
+		
+		document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds}`;
+	}
+	
+	async function startClock() {
+		await fetchAccurateTime();
+		updateClock();
+		setInterval(updateClock, 1000);         // Update display every second.
+		setInterval(fetchAccurateTime, 5 * 60 * 1000); // Re-sync every 5 minutes.
+	}
+	
+	startClock();
 </script>
 
 
