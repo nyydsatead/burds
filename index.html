@@ -137,13 +137,21 @@ body.dark #attribution {
 
 	async function fetchAccurateTime() {
 		try {
-			const res = await fetch("https://worldtimeapi.io/api/timezone/Europe/Moscow");
+			const res = await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Europe/Moscow");
 			const data = await res.json();
-			currentTime = new Date(data.datetime);
+
+			// Construct a Date object from the API response
+			currentTime = new Date(
+				data.year,
+				data.month - 1, // months are 0-indexed
+				data.day,
+				data.hour,
+				data.minute,
+				data.seconds
+			);
 		} catch (err) {
 			console.error("Failed to fetch accurate time:", err);
-			// Fallback to local system time +3 hours
-			currentTime = new Date(new Date().getTime() + 3 * 60 * 60 * 1000);
+			currentTime = new Date(new Date().getTime() + 3 * 60 * 60 * 1000); // fallback
 		}
 	}
 
@@ -153,7 +161,7 @@ body.dark #attribution {
 		const minutes = String(currentTime.getMinutes()).padStart(2, '0');
 		const seconds = String(currentTime.getSeconds()).padStart(2, '0');
 		document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds}`;
-		currentTime = new Date(currentTime.getTime() + 1000);
+		currentTime = new Date(currentTime.getTime() + 1000); // tick forward
 	}
 
 	async function startClock() {
@@ -164,4 +172,5 @@ body.dark #attribution {
 
 	startClock();
 </script>
+
 
